@@ -5,14 +5,17 @@ if [[ -z "${ANDROID_STUDIO}" ]] || [ ! -d "${ANDROID_STUDIO}" ]; then
 fi
 
 if [ "$(uname)" == "Darwin" ]; then
-  studio_formatter="$ANDROID_STUDIO/Contents/bin/format.sh"
+  studio_linter="$ANDROID_STUDIO/Contents/bin/inspect.sh"
 else
-  studio_formatter="$ANDROID_STUDIO/bin/format.sh"
+  studio_linter="$ANDROID_STUDIO/bin/inspect.sh"
 fi
 STUDIO_PROPERTIES="$(cd "$(dirname "$0")"; pwd -P)/idea.properties"
 export STUDIO_PROPERTIES
-format_xml="$(cd "$(dirname "$0")"; pwd -P)/Formatter.xml"
-tr '\n' ' ' <&0 | xargs "$studio_formatter" -s "$format_xml" || {
-  echo 'fatal: `format` failed' >&2
+
+lint_xml="$(cd "$(dirname "$0")"; pwd -P)/Linter.xml"
+
+"$studio_linter" "$1" "$lint_xml" "$2" || {
+  echo 'fatal: `lint` failed' >&2
   exit 1
 }
+
