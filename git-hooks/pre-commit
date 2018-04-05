@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 root="$(git rev-parse --show-toplevel)"
 [ -d "$root" ] || exit 1
@@ -21,8 +21,9 @@ find "$owndir"/autoformat -type f $FIND_ARGS | {
     patterns="$formatter".patterns
     [ -f "$patterns" -o -f "$magic" ] || continue
 
+    mkfifo filelist
     git diff --name-only --cached | {
-      labort=0
+      # labort=0
 
       while IFS= read -r orig ; do
         orig="${root}/${orig}"
@@ -43,13 +44,25 @@ find "$owndir"/autoformat -type f $FIND_ARGS | {
         # if none, ignore
         [ "$match_pattern" -o "$match_magic" ] ||  continue
 
-        "$formatter" "$orig" || labort=1
-        git add "$orig"
+        # "$formatter" "$orig" || labort=1
+        echo "$orig"
+        # git add "$orig"
       done
 
-      exit $labort
-    } || abort=1
+      # exit $labort
+    } > filelist
+    $formatter < filelist || abort=1
+    cat filelist | xargs git add 
+    rm filelist
   done
 
-  exit $abort
+  if [ "$abort" -eq "0" ]; then
+    echo "Format code success."
+  else
+    echo "Format code failed."
+    exit $abort
+  fi
+
+
 }
+exit 0
